@@ -23,9 +23,10 @@ public class UserController {
         // else, generate a refresh token for supplying a JWT
         // return refresh token for HTTP-Only
         SecureRandom random = new SecureRandom();
+        String authTokenValue = new BigInteger(512, random).toString(32);
         res.cookie("/",
                 "RefreshToken",
-                new BigInteger(512, random).toString(32),
+                authTokenValue,
                 86400 * 90,
                 false,
                 true);

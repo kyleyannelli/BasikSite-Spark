@@ -1,1 +1,2 @@
 liquibase.properties
+hibernate.cfg.xml
