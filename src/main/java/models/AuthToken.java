@@ -22,4 +22,8 @@ public class AuthToken {
     public User getUser() {
         return user;
     }
+
+    public String getValue() {
+        return value;
+    }
 }

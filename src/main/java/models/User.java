@@ -20,4 +20,13 @@ public class User {
     public Long getId() {
         return id;
     }
+
+    public boolean validAuthTokenForUser(String authTokenStr) {
+        for(AuthToken authToken : authTokens) {
+            if(authToken.getValue().equals(authTokenStr)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
