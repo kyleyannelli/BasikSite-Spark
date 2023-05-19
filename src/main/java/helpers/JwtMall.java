@@ -16,7 +16,7 @@ public class JwtMall {
                 .claim("role", "USER")
                 .setSubject(user.username())
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(new Date().getTime() + (3600000 * 24)))
+                .setExpiration(new Date(new Date().getTime() + (60000 * 5)))
                 .signWith(SignatureAlgorithm.HS512, getValueFromProperties("jwt-secret"))
                 .compact();
     }
