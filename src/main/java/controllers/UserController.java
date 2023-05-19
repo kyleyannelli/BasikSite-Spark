@@ -1,5 +1,7 @@
 package controllers;
 
+import org.tinylog.Logger;
+
 import javax.servlet.http.HttpServletResponse;
 import java.math.BigInteger;
 import java.security.SecureRandom;
@@ -17,6 +19,7 @@ public class UserController {
         // check if the user has the correct password, or a valid RefreshToken cookie
         if(req.cookies().containsKey("RefreshToken")) {
             halt(HttpServletResponse.SC_ACCEPTED);
+            Logger.info("");
             return "Already logged in.";
         }
         // halt() if neither

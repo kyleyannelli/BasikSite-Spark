@@ -1,2 +1,3 @@
 liquibase.properties
 hibernate.cfg.xml
+basik.properties

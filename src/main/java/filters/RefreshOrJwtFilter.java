@@ -1,5 +1,7 @@
 package filters;
 
+import models.User;
+import org.tinylog.Logger;
 import spark.Filter;
 import spark.Request;
 import spark.Response;
@@ -16,6 +18,7 @@ public class RefreshOrJwtFilter implements Filter {
 
         // if no attempt of providing auth tokens
         if(refreshToken == null && jwt == null) {
+            Logger.warn(request.ip() + " attempted to access " + request.pathInfo() + " without any tokens.");
             halt(401, "Unauthorized.");
         }
         //  if there's a refresh token but no JWT
@@ -37,5 +40,9 @@ public class RefreshOrJwtFilter implements Filter {
             // check if the JWT is invalid
             // if it is not valid halt(401)
         }
+    }
+
+    private User validateJwt(String jwt) {
+
     }
 }
