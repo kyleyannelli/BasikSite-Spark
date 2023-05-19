@@ -2,9 +2,12 @@ package repositories;
 
 import models.AuthToken;
 
-import java.util.Set;
+import java.util.List;
+import java.util.Optional;
 
 public interface AuthTokenRepository {
-    AuthToken findByValue(String value);
-    Set<AuthToken> findByUserId(long userId);
+    Optional<AuthToken> findByValue(String value);
+    List<AuthToken> findByUserId(long userId);
+
+    AuthToken save(AuthToken authToken);
 }

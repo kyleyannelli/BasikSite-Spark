@@ -4,6 +4,8 @@ import models.User;
 
 public interface UserRepository {
     User findById(long id);
-    User findByUsername(String username);
+    User findByUsernameAndTag(String username, String tagId);
     User save(User user);
+    boolean doesUsernameAndTagExist(String username, String tagId);
+    int getCountByUsername(String username);
 }

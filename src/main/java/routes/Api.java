@@ -2,21 +2,21 @@ package routes;
 
 import controllers.UserController;
 import filters.RefreshOrJwtFilter;
+import repositories.HibernateAuthTokenRepository;
+import repositories.HibernateUserRepository;
 
 import static spark.Spark.*;
 
 public class Api {
-    private UserController userController;
-    public Api(UserController userController) {
-        this.userController = userController;
-        setupRoutes();
+    public Api(UserController userController, HibernateUserRepository hibernateUserRepository, HibernateAuthTokenRepository hibernateAuthTokenRepository) {
+        setupRoutes(userController, hibernateUserRepository, hibernateAuthTokenRepository);
     }
-    public void setupRoutes() {
+    public void setupRoutes(UserController userController, HibernateUserRepository hibernateUserRepository, HibernateAuthTokenRepository hibernateAuthTokenRepository) {
         path("/api", () -> {
             post("/register", userController::register);
             post("/login", userController::login);
 
-            before("/users/*", new RefreshOrJwtFilter());
+            before("/users/*", new RefreshOrJwtFilter(hibernateUserRepository, hibernateAuthTokenRepository));
             path("/users", () -> {
                 get("/me", (req, res) -> {
                     return "Hello this is a test";

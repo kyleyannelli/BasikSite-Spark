@@ -1,54 +1,22 @@
 import controllers.UserController;
-import helpers.TinylogWriter;
-import liquibase.Contexts;
-import liquibase.Liquibase;
-import liquibase.database.Database;
-import liquibase.database.DatabaseConnection;
-import liquibase.database.DatabaseFactory;
-import liquibase.database.jvm.JdbcConnection;
-import liquibase.exception.LiquibaseException;
-import liquibase.resource.ClassLoaderResourceAccessor;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+import repositories.HibernateAuthTokenRepository;
+import repositories.HibernateUserRepository;
 import routes.Api;
-
-import java.io.*;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.util.Properties;
+import spark.Spark;
 
 public class Main {
     public static void main(String[] args) {
-        try {
-            runLiquibase();
-            new Api(new UserController());
-        } catch (IOException |
-                 LiquibaseException |
-                 SQLException exception) {
-            exception.printStackTrace();
-        }
-    }
+        // adjust this for your server
+        Spark.threadPool(50);
 
-    private static void runLiquibase() throws IOException, LiquibaseException, SQLException {
-        Properties props = new Properties();
-        InputStream input = Main.class.getClassLoader().getResourceAsStream("liquibase.properties");
-        props.load(input);
+        SessionFactory sessionFactory = new Configuration().configure().buildSessionFactory();
+        HibernateUserRepository hibernateUserRepository = new HibernateUserRepository(sessionFactory);
+        HibernateAuthTokenRepository hibernateAuthTokenRepository = new HibernateAuthTokenRepository(sessionFactory);
 
-        Connection connection = DriverManager.getConnection(
-                props.getProperty("url"),
-                props.getProperty("username"),
-                props.getProperty("password")
-        );
-
-        DatabaseConnection databaseConnection = new JdbcConnection(connection);
-
-        Database database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(databaseConnection);
-
-        Liquibase liquibase = new liquibase.Liquibase(
-                props.getProperty("changeLogFile"),
-                new ClassLoaderResourceAccessor(),
-                database
-        );
-        TinylogWriter tinylogWriter = new TinylogWriter();
-        liquibase.update("", tinylogWriter);
+        new Api(new UserController(hibernateUserRepository, hibernateAuthTokenRepository),
+                hibernateUserRepository,
+                hibernateAuthTokenRepository);
     }
 }
