@@ -3,15 +3,11 @@ package helpers;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys;
 import models.User;
 import org.tinylog.Logger;
 
-import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.Key;
-import java.util.Base64;
 import java.util.Date;
 import java.util.Properties;
 

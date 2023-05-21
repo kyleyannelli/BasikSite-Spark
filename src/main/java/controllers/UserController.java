@@ -10,7 +10,6 @@ import spark.Request;
 import spark.Response;
 
 import javax.servlet.http.HttpServletResponse;
-import java.net.URLEncoder;
 import java.util.*;
 
 import static spark.Spark.halt;
