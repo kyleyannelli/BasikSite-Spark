@@ -1,4 +1,5 @@
 import controllers.UserController;
+import helpers.JwtMall;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import repositories.HibernateAuthTokenRepository;
@@ -15,6 +16,7 @@ public class Main {
         HibernateUserRepository hibernateUserRepository = new HibernateUserRepository(sessionFactory);
         HibernateAuthTokenRepository hibernateAuthTokenRepository = new HibernateAuthTokenRepository(sessionFactory);
 
+        JwtMall.setHibernateUserRepository(hibernateUserRepository);
         new Api(new UserController(hibernateUserRepository, hibernateAuthTokenRepository),
                 hibernateUserRepository,
                 hibernateAuthTokenRepository);

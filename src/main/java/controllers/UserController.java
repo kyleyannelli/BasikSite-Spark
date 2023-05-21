@@ -1,6 +1,7 @@
 package controllers;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import helpers.JwtMall;
 import models.AuthToken;
 import models.User;
 import org.tinylog.Logger;
@@ -100,8 +101,7 @@ public class UserController {
 
     public String me(Request request, Response response) throws JsonProcessingException {
         response.type("application/json");
-        return hibernateUserRepository.findByJwt(request.cookies().containsKey("JWT") ?
-                request.cookies().get("JWT") : request.headers("Authorization")).toJson();
+        return JwtMall.getUserFromJwt(request).toJson();
     }
 
     public String getUserByIdOrUsername(Request request, Response response) {

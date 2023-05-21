@@ -5,6 +5,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import models.User;
 import org.tinylog.Logger;
+import repositories.HibernateUserRepository;
+import spark.Request;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -12,6 +14,7 @@ import java.util.Date;
 import java.util.Properties;
 
 public class JwtMall {
+    private static HibernateUserRepository hibernateUserRepository;
     public static String createJwtFromUser(User user) {
         return Jwts.builder()
                 .claim("role", "USER")
@@ -42,6 +45,19 @@ public class JwtMall {
         } catch (Exception e) {
             return true;
         }
+    }
+
+    public static User getUserFromJwt(String jwt) {
+        return hibernateUserRepository.findByJwt(jwt);
+    }
+
+    public static User getUserFromJwt(Request request) {
+        return hibernateUserRepository.findByJwt(request.cookies().containsKey("JWT") ?
+                request.cookies().get("JWT") : request.headers("Authorization"));
+    }
+
+    public static void setHibernateUserRepository(HibernateUserRepository userRepository) {
+        hibernateUserRepository = userRepository;
     }
 
     private static String getValueFromProperties(String key) {
