@@ -1,9 +1,12 @@
 package controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import models.AuthToken;
 import models.User;
 import repositories.HibernateAuthTokenRepository;
 import repositories.HibernateUserRepository;
+import spark.Request;
+import spark.Response;
 
 import javax.servlet.http.HttpServletResponse;
 import java.math.BigInteger;
@@ -21,7 +24,26 @@ public class UserController {
         this.hibernateAuthTokenRepository = hibernateAuthTokenRepository;
     }
     public String register(spark.Request req, spark.Response res) {
-        String username = req.queryParams("username"), password = req.queryParams("password"), passwordConfirm = req.queryParams("passwordConfirm");
+        String username = req.queryParams("username");
+        String password = req.queryParams("password");
+        String passwordConfirm = req.queryParams("passwordConfirm");
+        verifyRegistryParams(username, password, passwordConfirm);
+
+        User user = new User();
+        user.setUsername(username);
+        user.createPassword(password);
+        user.setTagId(User.generateTag(hibernateUserRepository, username));
+
+        if(hibernateUserRepository.save(user).getId() != null) {
+            res.status(HttpServletResponse.SC_CREATED);
+            return user.toString();
+        } else {
+            res.status(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            return "There was an issue creating the user.";
+        }
+    }
+
+    private void verifyRegistryParams(String username, String password, String passwordConfirm) {
         if(username == null
                 || password == null
                 || passwordConfirm == null) {
@@ -40,31 +62,6 @@ public class UserController {
         } else if(!password.equals(passwordConfirm)) {
             halt(HttpServletResponse.SC_BAD_REQUEST, "Ensure password, & passwordConfirm match");
         }
-        User user = new User();
-        user.setUsername(username);
-        user.createPassword(password);
-        int tagId, total = 0;
-        BitSet foundTags = new BitSet(10000);
-        if(hibernateUserRepository.getCountByUsername(username) >= 100) {
-            halt(HttpServletResponse.SC_CONFLICT, "Please pick a different username");
-        }
-        do {
-            tagId = ThreadLocalRandom.current().nextInt(0, 10000);
-            total++;
-
-            if(foundTags.get(tagId)) {
-                continue;
-            }
-            if (!hibernateUserRepository.doesUsernameAndTagExist(username, String.format("%0" + 4 + "d", tagId))) {
-                break;
-            }
-            foundTags.set(tagId);
-        } while (total <= 100);
-        if(total > 100) {
-            halt(HttpServletResponse.SC_CONFLICT, "Please pick a different username");
-        }
-        user.setTagId(tagId);
-        return hibernateUserRepository.save(user).getId() != null ? user.toString() : "There was an issue creating the user.";
     }
 
     public String login(spark.Request req, spark.Response res) {
@@ -72,36 +69,44 @@ public class UserController {
         String tag = req.queryParams("tag");
         String password = req.queryParams("password");
         String cookieAuthToken = req.cookie("RefreshToken");
-        System.out.println(cookieAuthToken);
-        Optional<AuthToken> existingAuthToken;
-        // check if the user has the correct password, or a valid RefreshToken cookie
-        if(req.cookies().containsKey("RefreshToken") &&
-                (existingAuthToken = hibernateAuthTokenRepository.findByValue(req.cookies().get("RefreshToken"))).isPresent() &&
-                existingAuthToken.get().isActive()) {
+
+        if (isValidRefreshToken(cookieAuthToken)) {
             halt(HttpServletResponse.SC_OK, "Already logged in.");
         }
-        User user = hibernateUserRepository.findByUsernameAndTag(username, tag);
-        if(!user.isCorrectPassword(password)) {
-            halt(401);
-        }
-        // else, generate a refresh token for supplying a JWT
-        // return refresh token for HTTP-Only
-        SecureRandom random = new SecureRandom();
-        String authTokenValue = new BigInteger(512, random).toString(32);
-        while(!hibernateAuthTokenRepository.findByValue(authTokenValue).isEmpty()) {
-            authTokenValue = new BigInteger(512, random).toString(32);
-        }
-        AuthToken authToken = new AuthToken(authTokenValue, user);
-        authToken.setExpiryInSeconds(new Date().toInstant().getEpochSecond() + (86400 * 90));
-        authToken.setActive(true);
+
+        User user = User.validateUser(hibernateUserRepository, username, tag, password);
+
+        AuthToken authToken = new AuthToken(user);
+        authToken.generate(hibernateAuthTokenRepository);
+        authToken.setUserAgent(req.userAgent());
         hibernateAuthTokenRepository.save(authToken);
+
         res.cookie("/",
                 "RefreshToken",
-                authTokenValue,
+                authToken.getValue(),
                 86400 * 90,
                 false,
                 true);
         res.status(HttpServletResponse.SC_CREATED);
+
         return "Logged in.";
+    }
+
+    private boolean isValidRefreshToken(String cookieAuthToken) {
+        if (cookieAuthToken == null) {
+            return false;
+        }
+        Optional<AuthToken> existingAuthToken = hibernateAuthTokenRepository.findByValue(cookieAuthToken);
+        return existingAuthToken.isPresent() && existingAuthToken.get().isActive();
+    }
+
+    public String me(Request request, Response response) throws JsonProcessingException {
+        try {
+            return hibernateUserRepository.findByJwt(request.cookies().containsKey("JWT") ?
+                    request.cookies().get("JWT") : request.headers("Authorization")).toJson();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "uhhh";
+        }
     }
 }

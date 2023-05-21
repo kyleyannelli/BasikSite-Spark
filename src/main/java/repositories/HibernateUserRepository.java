@@ -1,5 +1,8 @@
 package repositories;
 
+import helpers.JwtMall;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
 import models.User;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -35,7 +38,7 @@ public class HibernateUserRepository implements UserRepository {
     public User save(User user) {
         try(Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
-            session.saveOrUpdate(user);
+            session.merge(user);
             transaction.commit();
             return user;
         }
@@ -47,7 +50,7 @@ public class HibernateUserRepository implements UserRepository {
             return session.createQuery("FROM models.User WHERE username = :username AND tagId = :tagId", User.class)
                     .setParameter("username", username)
                     .setParameter("tagId", tagId)
-                    .uniqueResult() == null ? false : true;
+                    .uniqueResult() != null;
         }
     }
 
@@ -59,5 +62,11 @@ public class HibernateUserRepository implements UserRepository {
                     .uniqueResult();
             return count != null ? count.intValue() : 0;
         }
+    }
+
+    public User findByJwt(String jwt) {
+        System.out.println(jwt);
+        Claims claims = JwtMall.getClaimsFromJwt(jwt);
+        return findByUsernameAndTag(claims.getSubject(), claims.get("tag").toString());
     }
 }

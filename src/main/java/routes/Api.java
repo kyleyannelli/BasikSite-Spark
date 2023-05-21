@@ -18,9 +18,7 @@ public class Api {
 
             before("/users/*", new RefreshOrJwtFilter(hibernateUserRepository, hibernateAuthTokenRepository));
             path("/users", () -> {
-                get("/me", (req, res) -> {
-                    return "Hello this is a test";
-                });
+                get("/me", userController::me);
             });
         });
     }

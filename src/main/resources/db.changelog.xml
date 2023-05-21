@@ -59,4 +59,13 @@
         <addUniqueConstraint constraintName="unique_tag_id_username"
                              tableName="users" columnNames="tag_id, username"/>
     </changeSet>
+
+    <!-- MIGRATION #4 -->
+    <changeSet id="4" author="kyle_yannelli">
+        <addColumn tableName="users_auth_tokens">
+            <column name="user_agent" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

@@ -35,9 +35,19 @@ public class HibernateAuthTokenRepository implements AuthTokenRepository {
     public AuthToken save(AuthToken authToken) {
         try(Session session = sessionFactory.openSession()) {
             Transaction transaction = session.beginTransaction();
-            session.saveOrUpdate(authToken);
+            session.merge(authToken);
             transaction.commit();
             return authToken;
+        }
+    }
+
+    @Override
+    public void setIsActive(AuthToken authToken, boolean isActive) {
+        try (Session session = sessionFactory.openSession()) {
+            Transaction transaction = session.beginTransaction();
+            authToken.setIsActive(isActive);
+            session.merge(authToken);
+            transaction.commit();
         }
     }
 }

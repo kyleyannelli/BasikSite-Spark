@@ -1,12 +1,17 @@
 package helpers;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.security.Keys;
 import models.User;
 import org.tinylog.Logger;
 
+import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 import java.util.Properties;
 
@@ -15,10 +20,18 @@ public class JwtMall {
         return Jwts.builder()
                 .claim("role", "USER")
                 .setSubject(user.username())
+                .claim("tag", user.getTagId())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(new Date().getTime() + (60000 * 5)))
                 .signWith(SignatureAlgorithm.HS512, getValueFromProperties("jwt-secret"))
                 .compact();
+    }
+
+    public static Claims getClaimsFromJwt(String jwt) {
+        return Jwts.parser()
+                .setSigningKey(getValueFromProperties("jwt-secret"))
+                .parseClaimsJws(jwt)
+                .getBody();
     }
 
     public static boolean isInvalidJwt(String jwt) {
