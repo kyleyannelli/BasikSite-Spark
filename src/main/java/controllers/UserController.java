@@ -3,16 +3,15 @@ package controllers;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import models.AuthToken;
 import models.User;
+import org.tinylog.Logger;
 import repositories.HibernateAuthTokenRepository;
 import repositories.HibernateUserRepository;
 import spark.Request;
 import spark.Response;
 
 import javax.servlet.http.HttpServletResponse;
-import java.math.BigInteger;
-import java.security.SecureRandom;
+import java.net.URLEncoder;
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 
 import static spark.Spark.halt;
 
@@ -101,12 +100,25 @@ public class UserController {
     }
 
     public String me(Request request, Response response) throws JsonProcessingException {
+        response.type("application/json");
+        return hibernateUserRepository.findByJwt(request.cookies().containsKey("JWT") ?
+                request.cookies().get("JWT") : request.headers("Authorization")).toJson();
+    }
+
+    public String getUserByIdOrUsername(Request request, Response response) {
+        String usernameOrId = request.params(":usernameOrId");
         try {
-            return hibernateUserRepository.findByJwt(request.cookies().containsKey("JWT") ?
-                    request.cookies().get("JWT") : request.headers("Authorization")).toJson();
+            response.status(HttpServletResponse.SC_FOUND);
+            if(usernameOrId.chars().allMatch(Character::isDigit)) {
+                return hibernateUserRepository.findById(Long.parseLong(usernameOrId)).toJson();
+            } else {
+                String[] usernameAndTag = usernameOrId.split("@");
+                return hibernateUserRepository.findByUsernameAndTag(usernameAndTag[0], usernameAndTag[1]).toJson();
+            }
         } catch (Exception e) {
-            e.printStackTrace();
-            return "uhhh";
+            Logger.warn(e.getMessage() + " occurred while retrieving user " + usernameOrId + " via path " + request.pathInfo());
+            response.status(HttpServletResponse.SC_NOT_FOUND);
+            return "Not found or invalid format. Make sure you are using an id OR username with the tag formatted as kyle@2319";
         }
     }
 }
