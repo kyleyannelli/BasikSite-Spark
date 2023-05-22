@@ -19,6 +19,7 @@ public class Api {
             before("/users/*", new RefreshOrJwtFilter(hibernateUserRepository, hibernateAuthTokenRepository));
             path("/users", () -> {
                 get("/me", userController::me);
+                delete("/me/authentication", userController::invalidateAuthentication);
                 get("/:usernameOrId", userController::getUserByIdOrUsername);
             });
         });

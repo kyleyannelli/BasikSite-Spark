@@ -4,12 +4,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import helpers.JwtMall;
 import jakarta.persistence.*;
 import org.mindrot.jbcrypt.BCrypt;
+import repositories.HibernateAuthTokenRepository;
 import repositories.HibernateUserRepository;
+import spark.Request;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.BitSet;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -128,5 +133,20 @@ public class User {
         ObjectMapper mapper = new ObjectMapper();
         mapper.enable(SerializationFeature.INDENT_OUTPUT);
         return mapper.writeValueAsString(this);
+    }
+
+    public boolean isRequestingUser(HibernateAuthTokenRepository hibernateAuthTokenRepository, Request request) {
+        User jwtUser = JwtMall.getUserFromJwt(request);
+        Optional<AuthToken> authToken = hibernateAuthTokenRepository.findByValue(request.cookies().get("AuthToken"));
+        if(authToken.isPresent() && authToken.get().getUser().equals(jwtUser))  {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    @Override
+    public boolean equals(Object u) {
+        return u.getClass() == this.getClass() && Objects.equals(((User) u).id, this.id);
     }
 }

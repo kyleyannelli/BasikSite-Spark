@@ -120,4 +120,24 @@ public class UserController {
             return "Not found or invalid format. Make sure you are using an id OR username with the tag formatted as kyle@2319";
         }
     }
+
+    public String invalidateAuthentication(Request request, Response response) {
+        if(request.attribute("AuthenticationTokenObject") == null) halt(401);
+        AuthToken authToken = request.attribute("AuthenticationTokenObject");
+        hibernateAuthTokenRepository.setIsActive(authToken, false);
+        response.status(HttpServletResponse.SC_OK);
+        response.cookie("/",
+                "RefreshToken",
+                null,
+                0,
+                false,
+                true);
+        response.cookie("/",
+                "JWT",
+                null,
+                0,
+                false,
+                true);
+        return "Token has been invalidated!";
+    }
 }

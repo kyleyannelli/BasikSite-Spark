@@ -17,6 +17,7 @@ public class Main {
         HibernateAuthTokenRepository hibernateAuthTokenRepository = new HibernateAuthTokenRepository(sessionFactory);
 
         JwtMall.setHibernateUserRepository(hibernateUserRepository);
+        JwtMall.setHibernateAuthTokenRepository(hibernateAuthTokenRepository);
         new Api(new UserController(hibernateUserRepository, hibernateAuthTokenRepository),
                 hibernateUserRepository,
                 hibernateAuthTokenRepository);
