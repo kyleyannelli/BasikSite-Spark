@@ -68,4 +68,37 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <!-- MIGRATION #5 -->
+    <changeSet id="5" author="kyle_yannelli">
+        <createTable tableName="presets">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="bigint">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" type="varchar(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="direct_value" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint constraintName="fk_preset_user"
+                                 baseTableName="presets" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"/>
+    </changeSet>
+
+    <!-- MIGRATION #6 -->
+    <changeSet id="6" author="kyle_yannelli">
+        <addColumn tableName="presets">
+            <column name="is_public" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>
